@@ -1,5 +1,5 @@
 <script>
-  import { device, value, act, nameOf, num, pending, reachable } from '../lib/home.svelte.js';
+  import { device, value, act, nameOf, num, pending, reachable, coverPosition, coverPositionKey } from '../lib/home.svelte.js';
   import { t } from '../../lib/i18n.svelte.js';
   import Icon from './Icon.svelte';
   import ShutterIcon from './ShutterIcon.svelte';
@@ -10,8 +10,9 @@
   const d = $derived(device(id));
   const label = $derived(nameOf(id, name));
   const ok = $derived(reachable(id));
-  const pos = $derived(value(id, 'percent_control'));
-  const busy = $derived(pending(id, 'percent_control') || pending(id, 'control'));
+  const pos = $derived(coverPosition(id));
+  const posKey = $derived(coverPositionKey(id));
+  const busy = $derived(pending(id, posKey) || pending(id, 'control'));
   const offers = $derived(d?.points.find((p) => p.key === 'control')?.kind.values ?? []);
   const hasFavRecall = $derived(offers.includes('favourite') || offers.includes('my'));
   const hasFavSet = $derived(!!d?.points.find((p) => p.key === 'favourite_position')?.access?.write);
@@ -19,6 +20,8 @@
   const pct = $derived(pos == null ? null : Math.max(0, Math.min(100, Math.round(Number(pos)))));
 
   const story = $derived.by(() => {
+    if (!d) return t('commun.volet.introuvable');
+    if (!ok) return t('commun.volet.injoignable');
     if (pct == null) return null;
     if (pct >= 95) return t('commun.volet.ouvert');
     if (pct <= 5) return t('commun.volet.ferme');
@@ -34,6 +37,7 @@
 
   function tap() {
     const cmd = isOpen ? 'close' : 'open';
+    if (!offers.includes(cmd)) return;
     const action = t(isOpen ? 'commun.volet.fermer' : 'commun.volet.ouvrir').toLowerCase();
     act(`${id}/control`, cmd, t('commun.action', { label, action }));
   }
@@ -54,7 +58,8 @@
   function commitLevel(e) {
     const v = Number(e.currentTarget.value);
     dragging = null;
-    act(`${id}/percent_control`, v, t('commun.action', { label, action: t('commun.volet.position') }));
+    if (!posKey) return;
+    act(`${id}/${posKey}`, v, t('commun.action', { label, action: t('commun.volet.position') }));
   }
 </script>
 
@@ -63,7 +68,9 @@
     <ShutterIcon {id} size={46} />
     <span class="name">
       <b>{label}</b>
-      {#if pct != null}
+      {#if !d || !ok}
+        <small>{story}</small>
+      {:else if pct != null}
         <small>{story} · <b class="num">{num(pct)}%</b></small>
       {:else}
         <small></small>
@@ -71,7 +78,7 @@
     </span>
     <span class="toggle" aria-hidden="true"><i></i></span>
   </button>
-  {#if pct != null}
+  {#if pct != null && posKey}
     <div class="controls">
       <input
         class="level"
@@ -83,34 +90,34 @@
         onchange={commitLevel}
         aria-label={t('commun.volet.position_label', { label })} />
     </div>
-    <div class="actions">
-      {#if offers.includes('open')}
-        <button class="icon-btn" onclick={() => act(`${id}/control`, 'open', t('commun.action', { label, action: t('commun.volet.ouvrir').toLowerCase() }))} title={t('commun.volet.ouvrir')} aria-label={t('commun.volet.ouvrir')}>
-          <Icon name="chevron-up" size={20} />
-        </button>
-      {/if}
-      {#if offers.includes('stop')}
-        <button class="icon-btn" onclick={() => act(`${id}/control`, 'stop', t('commun.action', { label, action: t('commun.volet.stop').toLowerCase() }))} title={t('commun.volet.stop')} aria-label={t('commun.volet.stop')}>
-          <Icon name="stop" size={20} />
-        </button>
-      {/if}
-      {#if offers.includes('close')}
-        <button class="icon-btn" onclick={() => act(`${id}/control`, 'close', t('commun.action', { label, action: t('commun.volet.fermer').toLowerCase() }))} title={t('commun.volet.fermer')} aria-label={t('commun.volet.fermer')}>
-          <Icon name="chevron-down" size={20} />
-        </button>
-      {/if}
-      {#if hasFavRecall}
-        <button class="icon-btn" onclick={recallFav} title={t('commun.volet.my')} aria-label={t('commun.volet.my')}>
-          <Icon name="stars" size={20} />
-        </button>
-      {/if}
-      {#if hasFavSet}
-        <button class="icon-btn ghost" onclick={setFav} title={t('commun.volet.definir_my')} aria-label={t('commun.volet.definir_my')}>
-          <Icon name="heart" size={18} />
-        </button>
-      {/if}
-    </div>
   {/if}
+  <div class="actions">
+    {#if offers.includes('open')}
+      <button class="icon-btn" onclick={() => act(`${id}/control`, 'open', t('commun.action', { label, action: t('commun.volet.ouvrir').toLowerCase() }))} title={t('commun.volet.ouvrir')} aria-label={t('commun.volet.ouvrir')}>
+        <Icon name="chevron-up" size={20} />
+      </button>
+    {/if}
+    {#if offers.includes('stop')}
+      <button class="icon-btn" onclick={() => act(`${id}/control`, 'stop', t('commun.action', { label, action: t('commun.volet.stop').toLowerCase() }))} title={t('commun.volet.stop')} aria-label={t('commun.volet.stop')}>
+        <Icon name="stop" size={20} />
+      </button>
+    {/if}
+    {#if offers.includes('close')}
+      <button class="icon-btn" onclick={() => act(`${id}/control`, 'close', t('commun.action', { label, action: t('commun.volet.fermer').toLowerCase() }))} title={t('commun.volet.fermer')} aria-label={t('commun.volet.fermer')}>
+        <Icon name="chevron-down" size={20} />
+      </button>
+    {/if}
+    {#if hasFavRecall}
+      <button class="icon-btn" onclick={recallFav} title={t('commun.volet.my')} aria-label={t('commun.volet.my')}>
+        <Icon name="stars" size={20} />
+      </button>
+    {/if}
+    {#if hasFavSet}
+      <button class="icon-btn ghost" onclick={setFav} title={t('commun.volet.definir_my')} aria-label={t('commun.volet.definir_my')}>
+        <Icon name="heart" size={18} />
+      </button>
+    {/if}
+  </div>
 </div>
 
 <style>

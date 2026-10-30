@@ -1,11 +1,11 @@
 <script>
-  import { value } from '../lib/home.svelte.js';
+  import { coverPosition } from '../lib/home.svelte.js';
   import Icon from './Icon.svelte';
 
   /** Shutter icon showing open/closed/semi-open state */
   let { id, size = 46, compact = false } = $props();
 
-  const pct = $derived(value(id, 'percent_control'));
+  const pct = $derived(coverPosition(id));
   const isOpen = $derived(pct != null && pct >= 50);
 
   // Détermine quel état afficher : ouvert (>80%), semi (20-80%), fermé (<20%)

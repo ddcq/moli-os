@@ -106,7 +106,7 @@
   "commun.volet.ouvert_a": "Ouvert à {pct} %",
   "commun.volet.ouvert": "Ouvert",
   "commun.volet.ferme": "Fermé",
-  "commun.volet.entre_ouvert": "Entre-ouverte",
+  "commun.volet.entre_ouvert": "Entrouvert",
   "commun.volet.plus_de_controle": "Plus de contrôle",
   "commun.volet.position": "régler la position",
   "commun.volet.position_label": "Position de {label}",

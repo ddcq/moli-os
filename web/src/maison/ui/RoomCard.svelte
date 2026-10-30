@@ -1,5 +1,5 @@
 <script>
-  import { hub, value, act, isOn, powerKey, protectedRoom, num, nameOf, deviceKind, lampsOf, doorOpen, leak, motion, lowBattery, unpowered, isFixture, note, reachable, quiet, outletsOf } from '../lib/home.svelte.js';
+  import { hub, device, value, act, isOn, powerKey, protectedRoom, num, nameOf, deviceKind, lampsOf, doorOpen, leak, motion, lowBattery, unpowered, isFixture, note, reachable, quiet, outletsOf, coverPosition } from '../lib/home.svelte.js';
   import { t } from '../../lib/i18n.svelte.js';
   import Icon from './Icon.svelte';
   import LightTile from './LightTile.svelte';
@@ -187,7 +187,9 @@
 
   function stateOf(d, point, outlets, isCover) {
     if (isCover) {
-      const pct = value(d.id, 'percent_control');
+      if (!device(d.id)) return t('commun.volet.introuvable');
+      if (!reachable(d.id)) return t('commun.volet.injoignable');
+      const pct = coverPosition(d.id);
       if (pct == null) return '';
       if (pct >= 95) return t('commun.volet.ouvert');
       if (pct <= 5) return t('commun.volet.ferme');
@@ -204,9 +206,11 @@
 
   function tap(d, point, outlets, name, isCover) {
     if (isCover) {
-      const pct = value(d.id, 'percent_control');
+      const pct = coverPosition(d.id);
       const isOpen = pct != null && pct >= 50;
       const cmd = isOpen ? 'close' : 'open';
+      const offers = hub.devices[d.id]?.points.find((p) => p.key === 'control')?.kind.values ?? [];
+      if (!offers.includes(cmd)) return;
       const action = t(isOpen ? 'commun.volet.fermer' : 'commun.volet.ouvrir').toLowerCase();
       act(`${d.id}/control`, cmd, t('commun.action', { label: nameOf(d.id), action }));
       return;
@@ -285,7 +289,7 @@
   {#if pads.length}
     <div class="pads" class:icons>
       {#each pads as { d, point, link, outlets, name, isCover } (`${d.id}/${point}`)}
-        {@const lit = isCover ? (value(d.id, 'percent_control') ?? 0) >= 50 : link ? value(d.id, 'playing') === true : outlets ? litCount(outlets, d.id) > 0 : isOn(d.id, point)}
+        {@const lit = isCover ? (coverPosition(d.id) ?? 0) >= 50 : link ? value(d.id, 'playing') === true : outlets ? litCount(outlets, d.id) > 0 : isOn(d.id, point)}
         {@const cut = unpowered(d.id) && !isFixture(d)}
         {@const more = isCover ? true : !link && !point && !cut && (fine(d) || hasFan(d.id) || (isFixture(d) && d.members?.some(hasFan)))}
         {@const label = name ?? nameOf(d.id)}
@@ -293,11 +297,7 @@
           {#if link}
             <a class="pad" class:on={lit} href={link} title={label} aria-label={t('commun.action', { label, action: stateOf(d, point) })}>
               <span class="ico">
-                {#if isCover}
-                  <ShutterIcon id={d.id} size={icons ? 22 : 18} compact />
-                {:else}
-                  <Icon name={padIcon(d)} size={icons ? 22 : 18} />
-                {/if}
+                <Icon name={padIcon(d)} size={icons ? 22 : 18} />
               </span>
               {#if !icons}<b>{label}</b><small>{stateOf(d, point)}</small>{/if}
             </a>
