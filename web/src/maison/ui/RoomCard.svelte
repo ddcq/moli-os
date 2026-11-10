@@ -542,6 +542,11 @@
     opacity: 0.45;
   }
 
+  .pad:active:not(:disabled) {
+    transform: scale(0.97);
+    transition: transform 0.1s ease-out;
+  }
+
   .ico {
     width: 30px;
     height: 30px;
