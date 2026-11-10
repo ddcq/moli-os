@@ -591,8 +591,10 @@
     right: 6px;
     display: grid;
     place-items: center;
-    width: 22px;
-    height: 22px;
+    width: 28px;
+    height: 28px;
+    min-width: 44px;
+    min-height: 44px;
     border: none;
     border-radius: 50%;
     background: var(--surface);
