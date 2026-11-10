@@ -525,6 +525,11 @@
     transition: background 0.3s var(--ease), box-shadow 0.3s var(--ease);
   }
 
+  .pad:hover:not(:disabled):not(.cut):not(.off-grid) {
+    background: var(--surface-3);
+    transform: translateY(-1px);
+  }
+
   .icons .pad {
     min-height: 54px;
     padding: 0;
