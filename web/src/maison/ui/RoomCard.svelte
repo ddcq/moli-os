@@ -237,7 +237,7 @@
       <span class="muted">{room.lit ? t('commun.piece.allumees', { count: room.lit }) : t('commun.piece.tout_eteint')}</span>
     </div>
     {#if temp != null}
-      <span class="temp {roomTemperature.unit === '°C' ? tone(temp) : ''}" title={t('commun.piece.temperature')}><b class="num">{num(temp, 1)}{roomTemperature.unit}</b>{#if roomTemperature.unit === '°C'}<i class="gauge"><i style="left:{gaugeAt(temp)}%"></i></i>{/if}</span>
+      <span class="temp {roomTemperature.unit === '°C' ? tone(temp) : ''}" title={t('commun.piece.temperature') + ` : ${num(temp, 2)}${roomTemperature.unit}`}><b class="num">{num(temp, 1)}{roomTemperature.unit}</b>{#if roomTemperature.unit === '°C'}<i class="gauge"><i style="left:{gaugeAt(temp)}%"></i></i>{/if}</span>
     {/if}
     {#if lamps.length}
       <button class="round" class:open={showLooks} onclick={() => (showLooks = !showLooks)} aria-expanded={showLooks} title={t('commun.piece.ambiances')} aria-label={t('commun.piece.ambiances_de', { name: room.name })}>
